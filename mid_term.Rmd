@@ -1,0 +1,287 @@
+---
+title: "STAT 461 Midterm"
+output:
+  pdf_document:
+    fig_height: 3.5
+    fig_width: 3.5
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+exam.no <- round(runif(1,1000,10000),0)
+write.table(exam.no,"exam_no.txt",row.names = FALSE, col.names = FALSE)
+library(pander)
+library(gplots)
+library(multcompView)
+library(car)
+library(pwr)
+```
+
+This is exam is to be done individually.  By handing in the completed exam, you are indicating that all presented work is yours and you have not received help from another person.  You may ask Dr. Rutter questions to help clarify questions, but Dr. Rutter reserves the right to refuse to answer some questions.  The exam is due in Dr. Rutter's office by 2:00 PM on Friday, March 3rd.  Please email me your Rmd file.  This is exam #`r exam.no`.
+
+# Question 1
+
+The table below shows the amount spent on reading (in dollars) for a random sample of consumers from four regions of the United States.  Conduct a complete one factor ANOVA analysis of the data ($\alpha=0.05$).  Include a bar plot of the means of each region with 95% confidence intervals for each mean.  Please include the confidence intervals in numeric form as well.  Also, answer the questions given below.
+
+```{r include=FALSE}
+p.value <- 1
+bt.p <- 0
+while(p.value>.04 || bt.p <.05){
+n.j <- round(runif(4,4,10))
+Y.bar.j <- runif(4,100,200)
+r.mu <- rep(Y.bar.j,n.j)
+Y <- round(rnorm(length(r.mu),r.mu,35))
+region <- rep(c("Northeast","Midwest","South","West"),n.j)
+res <- aov(Y~region)
+res.bt <- bartlett.test(Y~region)
+p.value <- anova(res)[1,5]
+bt.p <- res.bt$p.value}
+data <- data.frame(sales=Y,region)
+file.name <- paste(exam.no,"q1.csv",sep="")
+write.csv(data,file.name,row.names=FALSE)
+q1.data <- data
+```
+
+```{r results='asis',echo=FALSE}
+panderOptions('knitr.auto.asis', FALSE)
+pander(unstack(data))
+```
+
+a.  Is there a difference between the west and south?
+
+b.  Is there a difference between the south and northeast?
+
+# Question 2
+
+An experiment was conducted to determine whether there is a difference among the growth levels of a shrub cutting when treated with one of five different hormones (A, B, C, D, and E).  Conduct a complete one factor ANOVA analysis of the data ($\alpha=0.05$).  Include a bar plot of the means of each region with 95% confidence intervals for each mean.  Please include the confidence intervals in numeric form as well.
+
+```{r include=FALSE}
+p.value <- 1
+bt.p <- 1
+log.p <- 0
+while(p.value>.05 || bt.p >.03 || log.p < .05){
+  n.j <- round(runif(1,4,8))
+  Y.bar.j <- runif(5,2.2,3.1)
+  r.mu <- rep(Y.bar.j,n.j)
+  Y.t <- rnorm(length(r.mu),r.mu,.095)
+  Y <- round(exp(Y.t),1)
+  hormone <- rep(c("A","B","C","D","E"),n.j)
+  res <- aov(log(Y)~hormone)
+  res.bt <- bartlett.test(Y~hormone)
+  res.bt.log <- bartlett.test(log(Y)~hormone)
+  p.value <- anova(res)[1,5]
+  bt.p <- res.bt$p.value
+  log.p <- res.bt.log$p.value}
+data <- data.frame(growth=Y,hormone)
+file.name <- paste(exam.no,"q2.csv",sep="")
+write.csv(data,file.name,row.names=FALSE)
+q2.data <- data
+```
+
+```{r results='asis',echo=FALSE}
+pander(unstack(data))
+```
+
+\pagebreak
+
+# Question 3
+
+```{r echo=FALSE}
+p.value <- 1
+bt.p <- 0
+while(p.value>.05 || bt.p <.05){
+n.j <- round(runif(1,4,8))
+Y.bar.j <- c(11.5,6,10,-3.5,-10)
+r.mu <- rep(Y.bar.j,n.j)
+Y <- round(rnorm(length(r.mu),r.mu,2.25))
+face <- rep(c("Angry","Disgusted","Happy","Neutral","Sad"),n.j)
+face <- ordered(face,levels = c("Neutral","Happy","Sad","Angry","Disgusted"))
+res <- aov(Y~face)
+res.bt <- bartlett.test(Y~face)
+p.value <- anova(res)[1,5]
+bt.p <- res.bt$p.value}
+data <- data.frame(dominance=Y,face)
+file.name <- paste(exam.no,"q3.csv",sep="")
+write.csv(data,file.name,row.names=FALSE)
+q3.data <- data
+```
+
+
+A sample of `r 5*n.j` psychology students were randomly divided into `r n.j` groups.  Each group was assigned to view a group of slides showing a facial expression.  The six expressions were angry, disgusted, happy, sad, and neutral.  After viewing the slides, the students rated degree of dominance on a scale ranging from -20 to +20.  Conduct an ANOVA to determine if there is a difference among the five facial expressions in terms of dominance.  Then answer the following questions using the indicated multiple comparison procedure for each set of questions.  Assume $\alpha=0.05$ and that all assumptions of ANOVA are satisfied.
+
+```{r results='asis',echo=FALSE}
+pander(unstack(data))
+```
+
+### Set A
+
+Compare the other four faces individually to neutral.  Use the Bonferroni correction method.  Label and interpret the results.
+
+### Set B
+
+Answer the following questions using the Scheffe procedure.  Please label each result.
+
+a.	Is there a difference between happy and the average of angry and disgusted?
+b.	Is there a difference between happy and the average of neutral and sad?
+c.	Is there a difference between the angry/disgusted average and the neutral/sad average?
+
+### Set C
+
+Find a 95% confidence interval for the average dominance of the angry, disgusted, and sad faces.  No multiple comparison procedure needed.
+
+\pagebreak 
+
+# Question 4
+
+```{r echo=FALSE}
+no.lakes <- round(runif(1,4,8),0)
+lake.names <- c("Lake Dorne","Lake Arryn","Lake Dothraki","Lake Valyrian",
+                "Lake Braavos","Lake Pentos","Lake Lannisport","Lake Pyke",
+                "Lake Qarth","Lake Myr","Lake Winterfell")
+my.lakes <- sample(lake.names,no.lakes)
+pha.levels <- round(runif(no.lakes,5,15),1)
+pha.sd <- round(runif(1,3,7),1)
+pha.data <- data.frame(Lake=my.lakes,"Mean PHA"=pha.levels)
+```
+
+
+A researcher is looking to compare the PHA levels (ppm) in livers of fish from `r no.lakes` lakes in Michigan.  Based on previous research, the mean PHA levels for the lakes under consideration are given below.  Assuming the standard deviation for PHA levels is `r pha.sd` ppm, how many samples would be needed to detect any differences between the lakes with 90% power.  Assume $\alpha=0.05$
+
+```{r echo=FALSE,results='asis'}
+pander(pha.data)
+```
+
+
+\pagebreak
+
+# Answers Exam `r exam.no`
+
+## Question 1
+
+```{r echo=FALSE}
+panderOptions('knitr.auto.asis', TRUE)
+res <- aov(sales~region,q1.data)
+pander(anova(res))
+MSE <- anova(res)[2,3]
+n.j <- tapply(q1.data$sales,q1.data$region,length)
+Y.bar.j<-tapply(q1.data$sales,q1.data$region,mean)
+df.error <- anova(res)[2,1]
+lb <- Y.bar.j - qt(1-.05/2,df.error)*sqrt(MSE/n.j)
+ub <- Y.bar.j + qt(1-.05/2,df.error)*sqrt(MSE/n.j)
+```
+
+```{r echo=FALSE}
+par(cex=.5)
+bp <- barplot2(Y.bar.j,ylim=c(0,250),plot.ci=TRUE,ci.l=lb,ci.u=ub,main="Mean with 95% CI")
+groups <- multcompLetters4(res,TukeyHSD(res))
+text(bp,ub,groups$region[[1]][levels(q1.data$region)],cex=1,pos=3)
+```
+
+```{r echo=FALSE}
+round(cbind(lb,ub),1)
+```
+
+\pagebreak
+
+## Question 2
+
+```{r echo=FALSE}
+bartlett.test(growth~hormone,q2.data)
+bartlett.test(log(growth)~hormone,q2.data)
+res <- aov(log(growth)~hormone,q2.data)
+pander(anova(res))
+MSE <- anova(res)[2,3]
+n.j <- tapply(q2.data$growth,q2.data$hormone,length)
+Y.bar.j<-tapply(log(q2.data$growth),q2.data$hormone,mean)
+df.error <- anova(res)[2,1]
+lb <- exp(Y.bar.j - qt(1-.05/2,df.error)*sqrt(MSE/n.j))
+ub <- exp(Y.bar.j + qt(1-.05/2,df.error)*sqrt(MSE/n.j))
+```
+
+```{r echo=FALSE}
+par(cex=.5)
+bp <- barplot2(exp(Y.bar.j),ylim=c(0,25),plot.ci=TRUE,ci.l=lb,ci.u=ub,main="Mean with 95% CI")
+groups <- multcompLetters4(res,TukeyHSD(res))
+text(bp,ub,groups$hormone[[1]][levels(q2.data$hormone)],cex=1,pos=3)
+```
+
+```{r echo=FALSE}
+round(cbind(lb,ub),2)
+```
+
+\pagebreak
+
+## Question 3
+
+```{r echo=FALSE}
+file.name <- paste(exam.no,"q3.csv",sep="")
+q3.data <- read.csv(file.name)
+res <- aov(dominance~face,q3.data)
+pander(anova(res))
+MSE <- anova(res)[2,3]
+n.j <- tapply(q3.data$dominance,q3.data$face,length)
+Y.bar.j<-tapply(q3.data$dominance,q3.data$face,mean)
+df.error <- anova(res)[2,1]
+```
+
+### Set A
+
+Neutral to Angry
+
+```{r echo=FALSE}
+c.j <- c(-1,0,0,1,0)
+round(sum(c.j*Y.bar.j) + c(-1,1)*qt(1-.05/(2*4),df.error)*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+Neutral to Disgusted
+
+```{r echo=FALSE}
+c.j <- c(0,-1,0,1,0)
+round(sum(c.j*Y.bar.j) + c(-1,1)*qt(1-.05/(2*4),df.error)*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+Neutral to Happy
+
+```{r echo=FALSE}
+c.j <- c(0,0,-1,1,0)
+round(sum(c.j*Y.bar.j) + c(-1,1)*qt(1-.05/(2*4),df.error)*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+Neutral to Sad
+
+```{r echo=FALSE}
+c.j <- c(0,0,0,1,-1)
+round(sum(c.j*Y.bar.j) + c(-1,1)*qt(1-.05/(2*4),df.error)*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+### Set B
+
+```{r echo=FALSE}
+S <- sqrt(4*qf(.95,4,df.error))
+c.j <- c(-.5,-.5,1,0,0)
+round(sum(c.j*Y.bar.j) + c(-1,1)*S*sqrt(MSE*sum(c.j^2/n.j)),2)
+c.j <- c(0,0,1,-.5,-.5)
+round(sum(c.j*Y.bar.j) + c(-1,1)*S*sqrt(MSE*sum(c.j^2/n.j)),2)
+c.j <- c(.5,.5,0,-.5,-.5)
+round(sum(c.j*Y.bar.j) + c(-1,1)*S*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+### Set C
+
+```{r echo=FALSE}
+c.j <- c(1/3,1/3,0,0,1/3)
+round(sum(c.j*Y.bar.j) + c(-1,1)*qt(1-.05/2,df.error)*sqrt(MSE*sum(c.j^2/n.j)),2)
+```
+
+\pagebreak
+
+# Question 4
+
+```{r}
+MSE <- pha.sd^2
+Y.bar.j <- pha.data$Mean.PHA
+Y.bar <- mean(Y.bar.j)
+es <- sqrt(sum(1/no.lakes*(Y.bar.j-Y.bar)^2)/MSE)
+#pwr.anova.test(k=5,power=.9,sig.level = .05,f=es) Original
+pwr.anova.test(k=no.lakes,power=.9,sig.level = .05,f=es) #Corrected
+```
+
